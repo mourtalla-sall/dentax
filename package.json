@@ -18,18 +18,22 @@
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
   },
   "dependencies": {
+    "@payloadcms/db-postgres": "3.94.2",
     "@payloadcms/next": "3.94.2",
     "@payloadcms/richtext-lexical": "3.94.2",
     "@payloadcms/ui": "3.94.2",
+    "@tailwindcss/postcss": "^4.3.5",
     "cross-env": "^7.0.3",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
+    "lucide-react": "^1.80.0",
     "next": "16.4.6",
     "payload": "3.94.2",
+    "postcss": "^8.5.33",
     "react": "19.2.9",
     "react-dom": "19.2.9",
     "sharp": "0.35.4",
-    "@payloadcms/db-postgres": "3.94.2"
+    "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
     "@playwright/test": "1.63.0",
