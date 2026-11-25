@@ -6,13 +6,20 @@ import { fileURLToPath } from 'url'
 
 import config from '@/payload.config'
 import './styles.css'
+
+import { Soins } from '@/components/sections/Soins'
 import { Hero } from '@/components/sections/Hero'
-
-
-
-
+import { Engagements } from '@/components/sections/Engagements'
+import { Equipe } from '@/components/sections/Equipe'
+import { Parcours } from '@/components/sections/Parcours'
 export default function HomePage() {
-  return <Hero />
+  return (
+    <>
+      <Hero />
+      <Engagements />
+      <Soins />
+      <Equipe />
+      <Parcours />
+    </>
+  )
 }
-  
-
