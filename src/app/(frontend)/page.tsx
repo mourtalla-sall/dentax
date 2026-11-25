@@ -10,13 +10,14 @@ import './styles.css'
 import { Soins } from '@/components/sections/Soins'
 import { Hero } from '@/components/sections/Hero'
 import { Engagements } from '@/components/sections/Engagements'
-
+import { Equipe } from '@/components/sections/Equipe'
 export default function HomePage() {
   return (
     <>
       <Hero />
       <Engagements />
-        <Soins />
+      <Equipe />
+      <Soins />
     </>
   )
 }
