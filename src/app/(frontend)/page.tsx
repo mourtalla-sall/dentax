@@ -6,13 +6,16 @@ import { fileURLToPath } from 'url'
 
 import config from '@/payload.config'
 import './styles.css'
+
+
 import { Hero } from '@/components/sections/Hero'
-
-
-
+import { Engagements } from '@/components/sections/Engagements'
 
 export default function HomePage() {
-  return <Hero />
+  return (
+    <>
+      <Hero />
+      <Engagements />
+    </>
+  )
 }
-  
-
