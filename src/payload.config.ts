@@ -7,6 +7,12 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Services } from './collections/Services'
+import { Practitioners } from './collections/Practitioners'
+import { Steps } from './collections/Steps'
+import { Appointments } from './collections/Appointments'
+import { Homepage } from './globals/Homepage'
+import { SiteSettings } from './globals/SiteSettings'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -14,20 +20,15 @@ const dirname = path.dirname(filename)
 export default buildConfig({
   admin: {
     user: Users.slug,
-    importMap: {
-      baseDir: path.resolve(dirname),
-    },
+    importMap: { baseDir: path.resolve(dirname) },
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Services, Practitioners, Steps, Appointments],
+  globals: [Homepage, SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
-  typescript: {
-    outputFile: path.resolve(dirname, 'payload-types.ts'),
-  },
+  typescript: { outputFile: path.resolve(dirname, 'payload-types.ts') },
   db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URL || '',
-    },
+    pool: { connectionString: process.env.DATABASE_URL || '' },
   }),
   sharp,
   plugins: [],

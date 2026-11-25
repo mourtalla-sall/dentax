@@ -69,6 +69,10 @@ export interface Config {
   collections: {
     users: User;
     media: Media;
+    services: Service;
+    practitioners: Practitioner;
+    steps: Step;
+    appointments: Appointment;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -78,6 +82,10 @@ export interface Config {
   collectionsSelect: {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    services: ServicesSelect<false> | ServicesSelect<true>;
+    practitioners: PractitionersSelect<false> | PractitionersSelect<true>;
+    steps: StepsSelect<false> | StepsSelect<true>;
+    appointments: AppointmentsSelect<false> | AppointmentsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -87,8 +95,14 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    homepage: Homepage;
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -164,6 +178,69 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  order: number;
+  title: string;
+  summary: string;
+  detail?: string | null;
+  icon?: (number | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "practitioners".
+ */
+export interface Practitioner {
+  id: number;
+  name: string;
+  photo: number | Media;
+  specialty: string;
+  rpps?: string | null;
+  diplomas?: string | null;
+  scope?: string | null;
+  convention?: string | null;
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "steps".
+ */
+export interface Step {
+  id: number;
+  number: number;
+  title: string;
+  text: string;
+  duration?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appointments".
+ */
+export interface Appointment {
+  id: number;
+  fullName: string;
+  phone: string;
+  email?: string | null;
+  reason: 'first' | 'checkup' | 'urgent' | 'other';
+  date: string;
+  time: string;
+  slotKey?: string | null;
+  status?: ('requested' | 'confirmed' | 'cancelled') | null;
+  consent: boolean;
+  internalNote?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -193,6 +270,22 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'services';
+        value: number | Service;
+      } | null)
+    | ({
+        relationTo: 'practitioners';
+        value: number | Practitioner;
+      } | null)
+    | ({
+        relationTo: 'steps';
+        value: number | Step;
+      } | null)
+    | ({
+        relationTo: 'appointments';
+        value: number | Appointment;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -279,6 +372,65 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services_select".
+ */
+export interface ServicesSelect<T extends boolean = true> {
+  order?: T;
+  title?: T;
+  summary?: T;
+  detail?: T;
+  icon?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "practitioners_select".
+ */
+export interface PractitionersSelect<T extends boolean = true> {
+  name?: T;
+  photo?: T;
+  specialty?: T;
+  rpps?: T;
+  diplomas?: T;
+  scope?: T;
+  convention?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "steps_select".
+ */
+export interface StepsSelect<T extends boolean = true> {
+  number?: T;
+  title?: T;
+  text?: T;
+  duration?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "appointments_select".
+ */
+export interface AppointmentsSelect<T extends boolean = true> {
+  fullName?: T;
+  phone?: T;
+  email?: T;
+  reason?: T;
+  date?: T;
+  time?: T;
+  slotKey?: T;
+  status?: T;
+  consent?: T;
+  internalNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -316,6 +468,164 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  hero?: {
+    pill?: string | null;
+    title?: string | null;
+    text?: string | null;
+    image?: (number | null) | Media;
+    primaryCta?: string | null;
+    secondaryCta?: string | null;
+    badge?: string | null;
+  };
+  commitments?: {
+    eyebrow?: string | null;
+    title?: string | null;
+    intro?: string | null;
+    image?: (number | null) | Media;
+    cards?:
+      | {
+          tag?: string | null;
+          title: string;
+          text?: string | null;
+          checks?:
+            | {
+                label: string;
+                id?: string | null;
+              }[]
+            | null;
+          pills?:
+            | {
+                label: string;
+                id?: string | null;
+              }[]
+            | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  treatments?: {
+    title?: string | null;
+    intro?: string | null;
+    image?: (number | null) | Media;
+    badge?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  clinicName?: string | null;
+  tagline?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  accessibility?: string | null;
+  orderNumber?: string | null;
+  hours?:
+    | {
+        day: '1' | '2' | '3' | '4' | '5' | '6' | '0';
+        open: string;
+        close: string;
+        id?: string | null;
+      }[]
+    | null;
+  breakStart?: string | null;
+  breakEnd?: string | null;
+  slotMinutes?: number | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        pill?: T;
+        title?: T;
+        text?: T;
+        image?: T;
+        primaryCta?: T;
+        secondaryCta?: T;
+        badge?: T;
+      };
+  commitments?:
+    | T
+    | {
+        eyebrow?: T;
+        title?: T;
+        intro?: T;
+        image?: T;
+        cards?:
+          | T
+          | {
+              tag?: T;
+              title?: T;
+              text?: T;
+              checks?:
+                | T
+                | {
+                    label?: T;
+                    id?: T;
+                  };
+              pills?:
+                | T
+                | {
+                    label?: T;
+                    id?: T;
+                  };
+              id?: T;
+            };
+      };
+  treatments?:
+    | T
+    | {
+        title?: T;
+        intro?: T;
+        image?: T;
+        badge?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  clinicName?: T;
+  tagline?: T;
+  phone?: T;
+  address?: T;
+  accessibility?: T;
+  orderNumber?: T;
+  hours?:
+    | T
+    | {
+        day?: T;
+        open?: T;
+        close?: T;
+        id?: T;
+      };
+  breakStart?: T;
+  breakEnd?: T;
+  slotMinutes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
