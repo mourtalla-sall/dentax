@@ -16,11 +16,19 @@ export const Appointments: CollectionConfig = {
     update: ({ req }) => Boolean(req.user),
     delete: ({ req }) => Boolean(req.user),
   },
-  hooks: {
+   hooks: {
     beforeValidate: [
-      ({ data }) => {
-        if (data?.date && data?.time) {
-          data.slotKey = `${data.date}T${data.time}`
+      ({ data, originalDoc }) => {
+        if (!data) return data
+        const status = data.status ?? originalDoc?.status
+        const date = data.date ?? originalDoc?.date
+        const time = data.time ?? originalDoc?.time
+
+        // Un rendez-vous annulé libère le créneau ; sinon la clé unique le verrouille.
+        if (status === 'cancelled') {
+          data.slotKey = null
+        } else if (date && time) {
+          data.slotKey = `${date}T${time}`
         }
         return data
       },
