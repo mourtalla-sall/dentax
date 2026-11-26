@@ -32,8 +32,8 @@ export async function Hero() {
         />
         <div aria-hidden="true" className="absolute inset-0 bg-brown/10" />
 
-        {/* Contenu */}
-        <div className="relative z-10 w-full px-6 py-16 md:px-16">
+        {/* Contenu : espace en haut pour la navbar flottante sur mobile */}
+        <div className="relative z-10 w-full px-6 pb-16 pt-32 md:px-16 md:py-16">
           <div className="max-w-xl">
             <p className="inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest text-white backdrop-blur-sm">
               <span className="h-1.5 w-1.5 rounded-full bg-mint" />
