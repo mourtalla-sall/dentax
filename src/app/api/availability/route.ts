@@ -54,9 +54,16 @@ export async function GET(req: NextRequest) {
     }))
     return { date, open: slots.length > 0, slots }
   })
-
   return NextResponse.json(
-    { week: monday, today: now.date, days },
+    {
+      week: monday,
+      today: now.date,
+      break:
+        settings.breakStart && settings.breakEnd
+          ? { start: settings.breakStart, end: settings.breakEnd }
+          : null,
+      days,
+    },
     { headers: { 'Cache-Control': 'no-store' } },
   )
 }

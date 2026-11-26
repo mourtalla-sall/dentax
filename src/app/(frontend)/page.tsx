@@ -12,6 +12,8 @@ import { Hero } from '@/components/sections/Hero'
 import { Engagements } from '@/components/sections/Engagements'
 import { Equipe } from '@/components/sections/Equipe'
 import { Parcours } from '@/components/sections/Parcours'
+import { RendezVous } from '@/components/sections/RendezVous'
+  
 export default function HomePage() {
   return (
     <>
@@ -20,6 +22,7 @@ export default function HomePage() {
       <Soins />
       <Equipe />
       <Parcours />
+      <RendezVous />
     </>
   )
 }

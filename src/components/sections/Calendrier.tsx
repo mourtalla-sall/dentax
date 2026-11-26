@@ -1,12 +1,24 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { CalendarCheck, CheckCircle2, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
+import {
+  CalendarCheck,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Loader2,
+} from 'lucide-react'
 import { addDays, mondayOf } from '@/lib/slots'
 
 type Slot = { time: string; available: boolean }
 type Day = { date: string; open: boolean; slots: Slot[] }
-type Week = { week: string; today: string; days: Day[] }
+type Week = {
+  week: string
+  today: string
+  break: { start: string; end: string } | null
+  days: Day[]
+}
 type Selected = { date: string; time: string }
 
 const REASONS = [
@@ -15,6 +27,9 @@ const REASONS = [
   { value: 'urgent', label: 'Urgence' },
   { value: 'other', label: 'Autre' },
 ]
+
+// Durées indicatives, à valider avec le cabinet.
+const DURATIONS: Record<string, number> = { first: 45, checkup: 30, urgent: 30, other: 30 }
 
 const MAX_WEEKS_AHEAD = 12
 
@@ -74,7 +89,7 @@ export function Calendrier() {
     return () => ctrl.abort()
   }, [week, reloadKey])
 
-  /* Jour affiché sur mobile : le jour courant s'il est libre, sinon le premier jour avec des créneaux */
+  /* Jour affiché sur mobile : le jour en cours s'il est valide, sinon le premier jour avec des créneaux */
   useEffect(() => {
     if (!data) return
     setActiveDay((cur) => {
@@ -164,9 +179,9 @@ export function Calendrier() {
   const active = activeDay ? data?.days.find((d) => d.date === activeDay) : null
 
   return (
-    <div className="grid items-start gap-6 lg:grid-cols-[1fr_22rem]">
+    <div className="rounded-3xl border border-line bg-white p-5 shadow-soft md:p-8">
       {/* ───────── Calendrier ───────── */}
-      <div className="rounded-3xl border border-line bg-white p-5 shadow-soft md:p-8">
+      <div>
         {/* Barre de navigation */}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -252,58 +267,82 @@ export function Calendrier() {
                   </div>
                 ))}
 
-                {times.map((time) => (
-                  <Row key={time} time={time}>
-                    {data.days.map((d) => {
-                      const state = lookup.get(d.date)?.get(time)
-                      const isSel = selected?.date === d.date && selected.time === time
-                      const label = `${capitalize(
-                        fmt(d.date, { weekday: 'long', day: 'numeric', month: 'long' }),
-                      )} à ${time}`
+                {times.map((time, i) => {
+                  // La bannière de pause s'insère avant le premier créneau qui suit la pause.
+                  const showBreak =
+                    data.break &&
+                    time >= data.break.end &&
+                    (i === 0 || times[i - 1] < data.break.end)
 
-                      if (state === undefined) {
-                        return (
-                          <span key={d.date} aria-hidden="true" className="text-center text-brown-soft/25">
-                            ·
-                          </span>
-                        )
-                      }
-                      if (!state) {
-                        return (
-                          <span
-                            key={d.date}
-                            className={`${slotBase} bg-peach/70 text-brown-soft/50 line-through`}
-                          >
-                            {time}
-                            <span className="sr-only"> – {label}, indisponible</span>
-                          </span>
-                        )
-                      }
-                      return (
-                        <button
-                          key={d.date}
-                          type="button"
-                          onClick={() => choose(d.date, time)}
-                          aria-pressed={isSel}
-                          aria-label={label}
-                          className={`${slotBase} border ${
-                            isSel
-                              ? 'border-mint bg-mint text-brown shadow-soft'
-                              : 'border-mint/60 bg-mint-tint text-mint-dark hover:bg-mint hover:text-brown'
-                          }`}
-                        >
-                          {time}
-                        </button>
-                      )
-                    })}
-                  </Row>
-                ))}
+                  return (
+                    <Fragment key={time}>
+                      {showBreak && data.break && (
+                        <div className="col-span-full rounded-lg bg-peach/60 py-2 text-center text-xs text-brown-soft">
+                          Pause méridienne ({data.break.start} – {data.break.end})
+                        </div>
+                      )}
+
+                      <Row time={time}>
+                        {data.days.map((d) => {
+                          const state = lookup.get(d.date)?.get(time)
+                          const isSel = selected?.date === d.date && selected.time === time
+                          const label = `${capitalize(
+                            fmt(d.date, { weekday: 'long', day: 'numeric', month: 'long' }),
+                          )} à ${time}`
+
+                          if (state === undefined) {
+                            return (
+                              <span
+                                key={d.date}
+                                aria-hidden="true"
+                                className="text-center text-brown-soft/25"
+                              >
+                                ·
+                              </span>
+                            )
+                          }
+                          if (!state) {
+                            return (
+                              <span
+                                key={d.date}
+                                className={`${slotBase} bg-peach/70 text-brown-soft/50 line-through`}
+                              >
+                                {time}
+                                <span className="sr-only"> – {label}, indisponible</span>
+                              </span>
+                            )
+                          }
+                          return (
+                            <button
+                              key={d.date}
+                              type="button"
+                              onClick={() => choose(d.date, time)}
+                              aria-pressed={isSel}
+                              aria-label={label}
+                              className={`${slotBase} border ${
+                                isSel
+                                  ? 'border-mint bg-mint text-brown shadow-soft'
+                                  : 'border-mint/60 bg-mint-tint text-mint-dark hover:bg-mint hover:text-brown'
+                              }`}
+                            >
+                              {time}
+                            </button>
+                          )
+                        })}
+                      </Row>
+                    </Fragment>
+                  )
+                })}
               </div>
             </div>
 
             {/* ── Vue jour mobile ── */}
             <div className="mt-6 md:hidden">
-              <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2" role="tablist" aria-label="Jours de la semaine">
+              <div
+                className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2"
+                role="tablist"
+                aria-label="Jours de la semaine"
+              >
                 {data.days.map((d) => {
                   const isActive = d.date === activeDay
                   return (
@@ -387,10 +426,10 @@ export function Calendrier() {
         )}
       </div>
 
-      {/* ───────── Panneau de réservation ───────── */}
+      {/* ───────── Panneau de réservation (sous la grille) ───────── */}
       <aside
         aria-label="Réservation"
-        className="rounded-3xl border border-line bg-white p-6 shadow-soft md:p-7 lg:sticky lg:top-28"
+        className="relative mt-8 rounded-2xl border border-line bg-cream p-5 md:p-7"
       >
         {success ? (
           <div role="status" className="text-center">
@@ -411,136 +450,152 @@ export function Calendrier() {
               Prendre un autre rendez-vous
             </button>
           </div>
-        ) : selected ? (
-          <form onSubmit={onSubmit} noValidate={false}>
-            <div className="flex items-start gap-3 rounded-2xl bg-mint-tint p-4">
-              <CalendarCheck size={20} className="mt-0.5 shrink-0 text-mint-dark" aria-hidden="true" />
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-mint-dark">
-                  Créneau sélectionné
-                </p>
-                <p className="mt-1 text-sm font-semibold">
-                  {capitalize(fmt(selected.date, { weekday: 'long', day: 'numeric', month: 'long' }))}{' '}
-                  · {selected.time}
-                </p>
-              </div>
-            </div>
-
-            <label className="mt-5 block text-sm font-semibold">
-              Nom &amp; prénom
-              <input
-                required
-                minLength={2}
-                maxLength={100}
-                autoComplete="name"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Ex. Thomas Renaud"
-                className={inputClass}
-              />
-            </label>
-
-            <label className="mt-4 block text-sm font-semibold">
-              Téléphone
-              <input
-                required
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                pattern="[0-9 .+()\-]{8,20}"
-                title="8 à 20 chiffres, espaces autorisés"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="06 12 34 56 78"
-                className={inputClass}
-              />
-            </label>
-
-            <label className="mt-4 block text-sm font-semibold">
-              Type de consultation
-              <select
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                className={inputClass}
-              >
-                {REASONS.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            {/* Champ piège : invisible pour un humain, rempli par les robots */}
-            <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
-              <label>
-                Ne pas remplir
-                <input
-                  tabIndex={-1}
-                  autoComplete="off"
-                  value={website}
-                  onChange={(e) => setWebsite(e.target.value)}
-                />
-              </label>
-            </div>
-
-            <label className="mt-5 flex cursor-pointer items-start gap-3 text-[13px] leading-snug text-brown-soft">
-              <input
-                type="checkbox"
-                required
-                checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
-                className="mt-0.5 h-4 w-4 shrink-0 accent-[#4e9c7c]"
-              />
-              <span>
-                J'accepte que ces informations soient utilisées pour gérer ma demande de
-                rendez-vous.{' '}
-                <a href="/confidentialite" className="font-semibold text-mint-dark underline">
-                  Politique de confidentialité
-                </a>
-                .
-              </span>
-            </label>
-
-            {formError && (
-              <p role="alert" className="mt-4 rounded-lg bg-peach p-3 text-sm">
-                {formError}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={submitting || !consent}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-mint px-5 py-3.5 text-sm font-semibold text-brown transition hover:bg-mint-hover disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {submitting && <Loader2 size={16} className="animate-spin" aria-hidden="true" />}
-              Confirmer le rendez-vous
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelected(null)}
-              className="mt-3 w-full text-center text-sm text-brown-soft underline"
-            >
-              Choisir un autre créneau
-            </button>
-
-            <p className="mt-4 text-xs leading-relaxed text-brown-soft">
-              Ne mentionnez pas de détails médicaux dans ce formulaire : le praticien les abordera
-              avec vous lors de la consultation.
-            </p>
-          </form>
         ) : (
-          <div className="text-center">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-mint-tint text-mint-dark">
-              <CalendarCheck size={26} aria-hidden="true" />
-            </span>
-            <h3 className="mt-4 text-2xl">Choisissez un créneau</h3>
-            <p className="mt-2 text-sm leading-relaxed text-brown-soft">
-              Sélectionnez une disponibilité dans le calendrier : il ne reste ensuite que trois
-              champs à remplir.
-            </p>
-          </div>
+          <form onSubmit={onSubmit}>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-mint-tint text-mint-dark">
+                  <CalendarCheck size={19} aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-mint-dark">
+                    {selected ? 'Créneau sélectionné' : 'Votre demande'}
+                  </p>
+                  <p className="mt-1 font-serif text-xl">
+                    {selected
+                      ? `${capitalize(
+                          fmt(selected.date, {
+                            weekday: 'long',
+                            day: 'numeric',
+                            month: 'long',
+                            year: 'numeric',
+                          }),
+                        )} · ${selected.time}`
+                      : 'Choisissez un créneau dans le calendrier'}
+                  </p>
+                </div>
+              </div>
+              {selected && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-line bg-white px-3 py-1.5 text-xs text-brown-soft">
+                  <Clock size={14} aria-hidden="true" /> Durée estimée : {DURATIONS[reason]} min
+                </span>
+              )}
+            </div>
+
+            {/* Tout est désactivé tant qu'aucun créneau n'est choisi */}
+            <fieldset
+              disabled={!selected}
+              className={`m-0 min-w-0 border-0 p-0 transition ${!selected ? 'opacity-50' : ''}`}
+            >
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <label className="block text-sm font-semibold">
+                  Nom &amp; prénom
+                  <input
+                    required
+                    minLength={2}
+                    maxLength={100}
+                    autoComplete="name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Ex. Thomas Renaud"
+                    className={inputClass}
+                  />
+                </label>
+
+                <label className="block text-sm font-semibold">
+                  Téléphone
+                  <input
+                    required
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    pattern="[0-9 .+()\-]{8,20}"
+                    title="8 à 20 chiffres, espaces autorisés"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="06 12 34 56 78"
+                    className={inputClass}
+                  />
+                </label>
+
+                <label className="block text-sm font-semibold">
+                  Type de consultation
+                  <select
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    className={inputClass}
+                  >
+                    {REASONS.map((r) => (
+                      <option key={r.value} value={r.value}>
+                        {r.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {/* Champ piège : invisible pour un humain, rempli par les robots */}
+              <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+                <label>
+                  Ne pas remplir
+                  <input
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                  />
+                </label>
+              </div>
+
+              {formError && (
+                <p role="alert" className="mt-5 rounded-lg bg-peach p-3 text-sm">
+                  {formError}
+                </p>
+              )}
+
+              <div className="mt-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <label className="flex max-w-xl cursor-pointer items-start gap-3 text-[13px] leading-snug text-brown-soft">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={consent}
+                    onChange={(e) => setConsent(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-[#4e9c7c]"
+                  />
+                  <span>
+                    J'accepte que ces informations soient utilisées pour gérer ma demande de
+                    rendez-vous.{' '}
+                    <a href="/confidentialite" className="font-semibold text-mint-dark underline">
+                      Confidentialité
+                    </a>
+                    . Ne mentionnez aucun détail médical ici.
+                  </span>
+                </label>
+
+                <div className="flex shrink-0 items-center gap-4">
+                  {selected && (
+                    <button
+                      type="button"
+                      onClick={() => setSelected(null)}
+                      className="text-sm text-brown-soft underline"
+                    >
+                      Changer de créneau
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={submitting || !consent || !selected}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-mint px-6 py-3.5 text-sm font-semibold text-brown transition hover:bg-mint-hover disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {submitting && (
+                      <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                    )}
+                    Confirmer le rendez-vous
+                  </button>
+                </div>
+              </div>
+            </fieldset>
+          </form>
         )}
       </aside>
     </div>
